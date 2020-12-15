@@ -13,3 +13,7 @@ flask run
 ```
 
 ## Usage
+Download the csv file from the official website of
+[RIVM](https://data.rivm.nl/covid-19/) and place this in the static folder
+
+
