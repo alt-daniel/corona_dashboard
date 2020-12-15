@@ -5,6 +5,7 @@ import dash_table
 from dash.dependencies import Input, Output
 import plotly as px
 import util.file_util as ut
+from .layout import province
 from config import Config
 
 
@@ -24,6 +25,7 @@ def init_dashboard(server):
     print(df2.columns)
     print(df2.info)
     print(df2['Deceased'].head())
+    provinces = ["Flevoland", "Noord-Holland"]
 
     fig = px.hist_frame(df2, x="Municipality_name", y="Deceased")
 
@@ -31,6 +33,7 @@ def init_dashboard(server):
     dash_app.layout = html.Div(
         children=[
             dcc.Graph(id='histogram-graph', figure=fig),
+            province.get_province_layout(dash_app, provinces),
             create_data_table(df2)
         ],
         id='dash-container'
