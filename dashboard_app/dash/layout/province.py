@@ -20,16 +20,29 @@ def get_province_layout(app):
 
     df = ut.create_csv_from_dataframe(Config.STATIC_DIR + '/COVID-19_aantallen_gemeente_per_dag.csv')
     df2 = df.groupby(['Municipality_name', 'Province'], as_index=False).sum()
-    df3 = df2.loc[df2['Province'].isin(provinces)]
+
+    max_value_range_slider = df2[statistics[0]].max()
+    min_value_range_slider = df2[statistics[0]].min()
 
     layout = html.Div([
         html.Div([
             html.H2("Select statistic", id="histogram-statistic-title"),
             dcc.Dropdown(
                 id="statistic-selector",
-                options=[{'label': item, "value": item} for item in statistics],
+                options=[{'label': item.replace('_', ' '), "value": item} for item in statistics],
                 value=statistics[0],
                 multi=False
+            ),
+            html.H2("Select a min and max value"),
+            dcc.RangeSlider(
+                id="statistic-rangeslider",
+                min=min_value_range_slider,
+                max=max_value_range_slider,
+                value=[min_value_range_slider, max_value_range_slider],
+                marks={
+                    str(min_value_range_slider): {'label': str(min_value_range_slider), 'style': {'color': '#f50'}},
+                    str(max_value_range_slider): {'label': str(max_value_range_slider), 'style': {'color': '#77b0b1'}}
+                }
             ),
             dcc.Graph(id='histogram-graph', figure=create_histogram_figure(df2, "Municipality_name", "Deceased")),
             html.H2("Select Province", id="province-title"),
@@ -77,9 +90,27 @@ def init_province_callbacks(app, df):
 
     @app.callback(
         Output(component_id="histogram-graph", component_property='figure'),
-        Input(component_id="statistic-selector", component_property='value')
+        Input(component_id="statistic-selector", component_property='value'),
+        Input(component_id="statistic-rangeslider", component_property='value')
     )
-    def update_statistic_histogram(value):
-        print(value)
-        return create_histogram_figure(df, "Municipality_name", value)
+    def update_statistic_histogram(selector_value, rangeslider_value):
+        df2 = df.loc[df[selector_value].between(rangeslider_value[0], rangeslider_value[1])]
+        return create_histogram_figure(df2, "Municipality_name", selector_value),
+
+    @app.callback(
+        Output(component_id="statistic-rangeslider", component_property='min'),
+        Output(component_id="statistic-rangeslider", component_property='max'),
+        Output(component_id="statistic-rangeslider", component_property='marks'),
+        Input(component_id="statistic-selector", component_property='value'),
+    )
+    def update_statistic_rangeslider(selector_value):
+        min_value = df[selector_value].min()
+        max_value = df[selector_value].max()
+        marks = {
+            str(min_value): {'label': str(min_value), 'style': {'color': '#f50'}},
+            str(max_value): {'label': str(max_value), 'style': {'color': '#77b0b1'}}
+        }
+
+        return min_value, max_value, marks
+
 
