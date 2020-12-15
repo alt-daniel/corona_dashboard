@@ -1,3 +1,5 @@
 dash_env
 config.py
 static
+__pycache__
+*dashboard.cpython-37.pyc
