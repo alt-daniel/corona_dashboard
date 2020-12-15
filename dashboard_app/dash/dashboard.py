@@ -24,8 +24,8 @@ def init_dashboard(server):
     dash_app.layout = html.Div([
         dcc.Tabs(
             id="nav-tabs", value="tab-1", children=[
-                dcc.Tab(label="province", value="tab-1"),
-                dcc.Tab(label="municipality", value="tab-2")
+                dcc.Tab(label="Municipality", value="tab-1"),
+                dcc.Tab(label="Province", value="tab-2")
             ]
         ),
         html.Div(id="dash-container")

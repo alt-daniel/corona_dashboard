@@ -16,23 +16,22 @@ def get_province_layout(app):
     provinces = ["Flevoland", "Noord-Holland", "Friesland", "Zuid-Holland", "Zeeland",
                  "Noord-Brabant", "Gelderland", "Overijssel", "Limburg", "Drenthe", "Groningen", "Utrecht"]
 
+    statistics = ["Deceased", "Hospital_admission", "Total_reported"]
+
     df = ut.create_csv_from_dataframe(Config.STATIC_DIR + '/COVID-19_aantallen_gemeente_per_dag.csv')
     df2 = df.groupby(['Municipality_name', 'Province'], as_index=False).sum()
-
-    print(Config.STATIC_DIR)
-    print(df.columns)
-    print(df2.columns)
-    print(df2.dtypes)
-    print(df2['Deceased'].head())
-
     df3 = df2.loc[df2['Province'].isin(provinces)]
-    print(df3.head(10))
-
-    fig = plt.hist_frame(df2, x="Municipality_name", y="Deceased")
 
     layout = html.Div([
         html.Div([
-            dcc.Graph(id='histogram-graph', figure=fig),
+            html.H2("Select statistic", id="histogram-statistic-title"),
+            dcc.Dropdown(
+                id="statistic-selector",
+                options=[{'label': item, "value": item} for item in statistics],
+                value=statistics[0],
+                multi=False
+            ),
+            dcc.Graph(id='histogram-graph', figure=create_histogram_figure(df2, "Municipality_name", "Deceased")),
             html.H2("Select Province", id="province-title"),
             dcc.Dropdown(
                 id="province-selector",
@@ -49,6 +48,11 @@ def get_province_layout(app):
 
     return layout
 
+
+def create_histogram_figure(df, x, y):
+    fig = plt.hist_frame(df, x=x, y=y)
+
+    return fig
 
 def create_data_table(df):
     table = dash_table.DataTable(
@@ -70,4 +74,12 @@ def init_province_callbacks(app, df):
     def update_data_table(value):
         df2 = df.loc[df['Province'].isin(list(value))]
         return df2.to_dict('records')
+
+    @app.callback(
+        Output(component_id="histogram-graph", component_property='figure'),
+        Input(component_id="statistic-selector", component_property='value')
+    )
+    def update_statistic_histogram(value):
+        print(value)
+        return create_histogram_figure(df, "Municipality_name", value)
 
