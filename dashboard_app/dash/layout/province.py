@@ -81,6 +81,37 @@ def create_data_table(df):
 
 def init_province_callbacks(app, df):
     @app.callback(
+        Output(component_id="statistic-rangeslider", component_property='min'),
+        Output(component_id="statistic-rangeslider", component_property='max'),
+        Output(component_id="statistic-rangeslider", component_property='value'),
+        Output(component_id="statistic-rangeslider", component_property='marks'),
+        # Output(component_id="histogram-graph", component_property='figure'),
+        Input(component_id="statistic-selector", component_property='value'),
+        # Input(component_id="statistic-rangeslider", component_property='value')
+    )
+    def update_range_slider(selector_value):
+
+        min_value = df[selector_value].min()
+        max_value = df[selector_value].max()
+        range = [min_value, max_value]
+        marks = {
+            str(min_value): {'label': str(min_value), 'style': {'color': '#f50'}},
+            str(max_value): {'label': str(max_value), 'style': {'color': '#77b0b1'}}
+        }
+        return min_value, max_value, range, marks
+
+
+    @app.callback(
+        Output(component_id="histogram-graph", component_property='figure'),
+        Input(component_id="statistic-selector", component_property='value'),
+        Input(component_id="statistic-rangeslider", component_property='value')
+    )
+    def update_histogram_on_range_and_selector(selector_value, rangeslider_value):
+        df2 = df.loc[df[selector_value].between(rangeslider_value[0], rangeslider_value[1])]
+        return create_histogram_figure(df2, "Municipality_name", selector_value)
+
+
+    @app.callback(
         Output(component_id="database-table", component_property='data'),
         Input(component_id="province-selector", component_property='value')
     )
@@ -88,29 +119,6 @@ def init_province_callbacks(app, df):
         df2 = df.loc[df['Province'].isin(list(value))]
         return df2.to_dict('records')
 
-    @app.callback(
-        Output(component_id="histogram-graph", component_property='figure'),
-        Input(component_id="statistic-selector", component_property='value'),
-        Input(component_id="statistic-rangeslider", component_property='value')
-    )
-    def update_statistic_histogram(selector_value, rangeslider_value):
-        df2 = df.loc[df[selector_value].between(rangeslider_value[0], rangeslider_value[1])]
-        return create_histogram_figure(df2, "Municipality_name", selector_value),
 
-    @app.callback(
-        Output(component_id="statistic-rangeslider", component_property='min'),
-        Output(component_id="statistic-rangeslider", component_property='max'),
-        Output(component_id="statistic-rangeslider", component_property='marks'),
-        Input(component_id="statistic-selector", component_property='value'),
-    )
-    def update_statistic_rangeslider(selector_value):
-        min_value = df[selector_value].min()
-        max_value = df[selector_value].max()
-        marks = {
-            str(min_value): {'label': str(min_value), 'style': {'color': '#f50'}},
-            str(max_value): {'label': str(max_value), 'style': {'color': '#77b0b1'}}
-        }
-
-        return min_value, max_value, marks
 
 

@@ -21,29 +21,42 @@ def init_dashboard(server):
     )
 
     # Create Dash Layout
+    # dash_app.layout = html.Div([
+    #     dcc.Location(id='url', refresh=False),
+    #     dcc.Tabs(
+    #         id="nav-tabs", value="tab-1", children=[
+    #             dcc.Tab(label="Municipality", value="tab-1"),
+    #             dcc.Tab(label="Province", value="tab-2")
+    #         ]
+    #     ),
+    #     html.Div(id="dash-container")
+    # ])
+
     dash_app.layout = html.Div([
-        dcc.Tabs(
-            id="nav-tabs", value="tab-1", children=[
-                dcc.Tab(label="Municipality", value="tab-1"),
-                dcc.Tab(label="Province", value="tab-2")
-            ]
-        ),
-        html.Div(id="dash-container")
+        dcc.Tabs([
+                dcc.Tab(label="Page1", children=[province.get_province_layout(dash_app)]),
+                dcc.Tab(label="Page2", children=[html.H3("Hello world")])
+
+        ])
     ])
 
-    init_tab_callbacks(dash_app)
+    ## TODO: Find out why these callbacks conflict with callbacks from external file on page refresh (CMD+R)
+    # init_tab_callbacks(dash_app)
 
     return dash_app.server
 
-def init_tab_callbacks(app):
-    @app.callback(Output('dash-container', 'children'), Input('nav-tabs', 'value'))
-    def render_tab_content(tab):
-        if tab == 'tab-1':
-            return province.get_province_layout(app)
-        elif tab == 'tab-2':
-            return html.Div([
-                        html.H3('Content tab2')
-            ])
+# def init_tab_callbacks(app):
+#     @app.callback(Output('dash-container', 'children'), Input('nav-tabs', 'value'))
+#     def render_tab_content(tab):
+#         if tab == 'tab-1':
+#             return province.get_province_layout(app)
+#         elif tab == 'tab-2':
+#             return html.Div([
+#                         html.H3('Content tab2')
+#             ])
+
+
+
 
 
 
