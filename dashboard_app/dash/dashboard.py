@@ -1,6 +1,7 @@
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 import dash_table
 import dash_table
 from dash.dependencies import Input, Output
@@ -17,6 +18,7 @@ def init_dashboard(server):
         routes_pathname_prefix='/dashapp/',
         external_stylesheets=[
             '/static/dist/css/styles.css',
+            dbc.themes.BOOTSTRAP,
         ]
     )
 
@@ -34,8 +36,8 @@ def init_dashboard(server):
 
     dash_app.layout = html.Div([
         dcc.Tabs([
-                dcc.Tab(label="Page1", children=[province.get_province_layout(dash_app)]),
-                dcc.Tab(label="Page2", children=[html.H3("Hello world")])
+                dcc.Tab(label="Overview", children=[province.get_province_layout(dash_app)]),
+                dcc.Tab(label="Detail", children=[html.H3("Hello world")])
 
         ])
     ])
