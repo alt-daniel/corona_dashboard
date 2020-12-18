@@ -7,7 +7,7 @@ import dash_table
 from dash.dependencies import Input, Output
 import plotly as px
 import util.file_util as ut
-from .layout import province
+from .layout import province, detail
 from config import Config
 
 
@@ -37,8 +37,7 @@ def init_dashboard(server):
     dash_app.layout = html.Div([
         dcc.Tabs([
                 dcc.Tab(label="Overview", children=[province.get_province_layout(dash_app)]),
-                dcc.Tab(label="Detail", children=[html.H3("Hello world")])
-
+                dcc.Tab(label="Detail", children=[html.H3("Hello world"), detail.get_detail_layout(dash_app)])
         ])
     ])
 
