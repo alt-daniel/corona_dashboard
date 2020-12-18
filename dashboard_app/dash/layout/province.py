@@ -17,7 +17,7 @@ def get_province_layout(app):
 
     statistics = ["Deceased", "Hospital_admission", "Total_reported"]
 
-    df = ut.create_csv_from_dataframe(Config.STATIC_DIR + '/COVID-19_aantallen_gemeente_per_dag.csv')
+    df = ut.create_csv_from_dataframe(Config.STATIC_DATA_DIR + '/COVID-19_aantallen_gemeente_per_dag.csv')
     print(df['Date_of_report'].dtype)
     # df2 = df.groupby(['Municipality_name', 'Province'], as_index=False).sum()
     df2 = df.loc[df['Date_of_publication'].between('2020-01-01', '2020-12-12')].groupby(['Municipality_name', 'Province'], as_index=False).sum()

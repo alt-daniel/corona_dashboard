@@ -12,8 +12,8 @@ import json
 from urllib.request import urlopen
 
 def get_detail_layout(dashboard_app):
-    df = ut.create_csv_from_dataframe(Config.STATIC_DIR + '/COVID-19_aantallen_gemeente_per_dag.csv')
-    province_geojson = Config.STATIC_DIR + "/the-netherlands.geojson"
+    df = ut.create_csv_from_dataframe(Config.STATIC_DATA_DIR + '/COVID-19_aantallen_gemeente_per_dag.csv')
+    province_geojson = Config.STATIC_DATA_DIR + "/the-netherlands.geojson"
 
     layout = html.Div(
         dcc.Graph(id="province-map", figure=get_province_map(df, province_geojson))

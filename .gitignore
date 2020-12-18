@@ -1,7 +1,13 @@
 dash_env
 config.py
-static
+
 __pycache__
+dashboard_app/__pycache__/
 *dashboard.cpython-37.pyc
 .idea
 .env
+
+
+# files
+static/dist
+static/.webassets-cache

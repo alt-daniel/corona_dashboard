@@ -13,3 +13,4 @@ class Config:
     # Static
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
     STATIC_DIR = os.path.join(ROOT_DIR, "dashboard_app/static")
+    STATIC_DATA_DIR = STATIC_DIR + "/data"
