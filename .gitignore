@@ -11,3 +11,5 @@ dashboard_app/__pycache__/
 # files
 static/dist
 static/.webassets-cache
+dashboard_app/static/dist
+dashboard_app/static/.webassets-cache

@@ -34,7 +34,9 @@ def get_province_map(df, geojson):
                         featureidkey='properties.name',
                         color_continuous_scale="Viridis",
                         range_color=(df2["Total_reported"].min(), df2["Total_reported"].max()),
+                        hover_data=['Hospital_admission', 'Deceased'],
                         labels={"Total_reported": 'Getest',
+                                "Deceased: Overleden"
                                 'Hospital_admission': 'Opname ziekenhuis'}
                         )
 

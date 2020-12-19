@@ -1,6 +1,8 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
+import plotly.graph_objects as go
+import plotly as plt
 from datetime import date
 
 
@@ -43,3 +45,40 @@ def create_datepicker(id):
         display_format='D MMM YYYY'
     )
     return datepicker
+
+
+def create_dropdown(id, list_of_options, multi_boolean=False):
+    dropdown = dcc.Dropdown(
+                    id=id,
+                    options=[{'label': item.replace('_', ' '), "value": item} for item in list_of_options],
+                    value=list_of_options[0],
+                    multi=multi_boolean
+                )
+    return dropdown
+
+
+def create_bar_chart(df, x, y):
+    fig = go.Figure(data=[go.Bar(x=df[x], y=df[y])])
+    fig.update_layout(
+        title_text='Aantallen per gemeente',
+        transition={
+            'duration': 700,
+            'easing': 'cubic-in-out'
+        },
+        paper_bgcolor='rgba(255, 255, 255)',
+        plot_bgcolor='rgba(249,249,249,0)'
+        # yaxis_title_text=str(y),
+    )
+
+    return fig
+
+
+def create_histogram_figure(df, x, y):
+    fig = plt.hist_frame(df, x=x, y=y)
+    fig.update_layout(
+        xaxis_title_text='Gemeente',
+        yaxis_title_text=str(y),
+        title_text='Aantallen per gemeente',
+    )
+
+    return fig

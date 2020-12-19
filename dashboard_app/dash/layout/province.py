@@ -2,9 +2,6 @@ from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-import plotly.graph_objects as go
-import plotly.express as px
-import plotly as plt
 from config import Config
 import util.file_util as ut
 from dashboard_app.dash.data import data_metrics as dm
@@ -18,7 +15,6 @@ def get_province_layout(app):
     statistics = ["Deceased", "Hospital_admission", "Total_reported"]
 
     df = ut.create_csv_from_dataframe(Config.STATIC_DATA_DIR + '/COVID-19_aantallen_gemeente_per_dag.csv')
-    print(df['Date_of_report'].dtype)
     # df2 = df.groupby(['Municipality_name', 'Province'], as_index=False).sum()
     df2 = df.loc[df['Date_of_publication'].between('2020-01-01', '2020-12-12')].groupby(['Municipality_name', 'Province'], as_index=False).sum()
 
@@ -33,61 +29,50 @@ def get_province_layout(app):
     layout = html.Div([
         html.Div([
             html.Div([
-                cu.create_import_metric_block(str(n_of_municipalities), "important-metric-block",
-                                           "important-metric-municipalities", "Gemeentes"),
-                cu.create_import_metric_block(max_deceased, "important-metric-block",
-                                           "important-metric-deceased", "Overleden"),
-                cu.create_import_metric_block(max_hospital_admission, "important-metric-block",
-                                           "important-metric-hospital-admission", "Ziekenhuisopname"),
-                cu.create_import_metric_block(max_total_reported, "important-metric-block",
-                                           "important-metric-total-reported", "Positief getest"),
-                html.H2("Select statistic", id="histogram-statistic-title"),
-                dcc.Dropdown(
-                    id="statistic-selector",
-                    options=[{'label': item.replace('_', ' '), "value": item} for item in statistics],
-                    value=statistics[0],
-                    multi=False
-                ),
-                html.H2("Select a min and max value"),
-                dcc.RangeSlider(
-                    id="statistic-rangeslider",
-                    min=min_value_range_slider,
-                    max=max_value_range_slider,
-                    value=[min_value_range_slider, max_value_range_slider],
-                    marks={
-                        str(min_value_range_slider): {'label': str(min_value_range_slider), 'style': {'color': '#f50'}},
-                        str(max_value_range_slider): {'label': str(max_value_range_slider),
-                                                      'style': {'color': '#77b0b1'}}
-                    },
-                    tooltip={'placement': 'bottom'},
-                ),
-                cu.create_datepicker("statistics-datepicker")
-            ], id="left-overview-header"),
+                html.Div([
+                    html.Div([
+                        cu.create_import_metric_block(str(n_of_municipalities), "important-metric-block col",
+                                                   "important-metric-municipalities", "Gemeentes"),
+                        cu.create_import_metric_block(max_deceased, "important-metric-block col",
+                                                   "important-metric-deceased", "Overleden"),
+                        cu.create_import_metric_block(max_hospital_admission, "important-metric-block col",
+                                                   "important-metric-hospital-admission", "Ziekenhuisopnames"),
+                        cu.create_import_metric_block(max_total_reported, "important-metric-block col",
+                                                   "important-metric-total-reported", "Positief getest")
+                    ], className="row"),
+                    html.Div([
+                        html.H2("Select statistic", id="histogram-statistic-title"),
+                        cu.create_dropdown("statistic-selector", statistics),
+                        html.H2("Select a start and end date"),
+                        cu.create_datepicker("statistics-datepicker"),
+                        html.H2("Select a min and max value"),
+                        dcc.RangeSlider(
+                            id="statistic-rangeslider",
+                            tooltip={'placement': 'bottom'}
+                        )], id="left-overview-header-container")
+                ], id="left-overview-header", className="col-4"),
+                    html.Div([
+                        html.Div([
+                            dcc.Graph(id='bar-chart-graph')
+                        ], id="bar-chart-graph-container")
+                    ], id="right-overview-header col", className="col-8")
+            ], id="province-header", className="row"),
             html.Div([
-                dcc.Graph(id='histogram-graph', figure=create_histogram_figure(df2, "Municipality_name", "Deceased")),
-            ], id="right-overview-header"),
-        ], id="province-header"),
-        html.Div([
-            html.H2("Select Province", id="province-title"),
-            dcc.Dropdown(
-                id="province-selector",
-                options=[{'label': item, "value": item} for item in provinces],
-                value=provinces,
-                multi=True
-            ),
-            cu.create_data_table(df2)
-        ], id="province-content")
+                html.H2("Select Province", id="province-title"),
+                dcc.Dropdown(
+                    id="province-selector",
+                    options=[{'label': item, "value": item} for item in provinces],
+                    value=provinces,
+                    multi=True
+                ),
+                cu.create_data_table(df2)
+            ], id="province-content")
+        ], className="container")
     ], id="province-container")
 
     init_province_callbacks(app, df)
 
     return layout
-
-
-def create_histogram_figure(df, x, y):
-    fig = plt.hist_frame(df, x=x, y=y)
-
-    return fig
 
 
 def init_province_callbacks(app, df):
@@ -96,15 +81,11 @@ def init_province_callbacks(app, df):
         Output(component_id="statistic-rangeslider", component_property='max'),
         Output(component_id="statistic-rangeslider", component_property='value'),
         Output(component_id="statistic-rangeslider", component_property='marks'),
-        # Output(component_id="histogram-graph", component_property='figure'),
         Input(component_id="statistic-selector", component_property='value'),
         Input("statistics-datepicker", 'start_date'),
         Input("statistics-datepicker", 'end_date')
-        # Input(component_id="statistic-rangeslider", component_property='value')
     )
     def update_range_slider(selector_value, start_date, end_date):
-        print(start_date)
-        print(end_date)
 
         df2 = df.loc[df['Date_of_publication'].between(start_date, end_date)].\
             groupby(['Municipality_name', 'Province'], as_index=False).sum()
@@ -120,17 +101,27 @@ def init_province_callbacks(app, df):
 
 
     @app.callback(
-        Output(component_id="histogram-graph", component_property='figure'),
+        Output(component_id="bar-chart-graph", component_property='figure'),
+        Output(component_id="important-metric-municipalities", component_property='children'),
+        Output(component_id="important-metric-deceased", component_property='children'),
+        Output(component_id="important-metric-hospital-admission", component_property='children'),
+        Output(component_id="important-metric-total-reported", component_property='children'),
         Input(component_id="statistic-selector", component_property='value'),
         Input(component_id="statistic-rangeslider", component_property='value'),
         Input("statistics-datepicker", 'start_date'),
         Input("statistics-datepicker", 'end_date')
     )
-    def update_histogram_on_range_and_selector(selector_value, rangeslider_value, start_date, end_date):
+    def update_bar_chart_on_range_and_selector(selector_value, rangeslider_value, start_date, end_date):
         df2 = df.loc[df['Date_of_publication'].between(start_date, end_date)]. \
                 groupby(['Municipality_name', 'Province'], as_index=False).sum()
         df3 = df2.loc[df2[selector_value].between(rangeslider_value[0], rangeslider_value[1])]
-        return create_histogram_figure(df3, "Municipality_name", selector_value)
+
+        max_deceased = dm.get_total_sum_from_column(df3, "Deceased")
+        max_hospital_admission = dm.get_total_sum_from_column(df3, "Hospital_admission")
+        max_total_reported = dm.get_total_sum_from_column(df3, "Total_reported")
+
+        return cu.create_bar_chart(df3, "Municipality_name", selector_value), df3['Municipality_name'].nunique(),\
+               max_deceased, max_hospital_admission, max_total_reported
 
 
     @app.callback(
@@ -142,14 +133,6 @@ def init_province_callbacks(app, df):
         df2 = df2.loc[df2['Province'].isin(list(value))]
         return df2.to_dict('records')
 
-
-    # @app.callback(
-    #     Input("statistics-datepicker", 'start_date'),
-    #     Input("statistics-datepicker", 'end_date')
-    # )
-    # def filter_on_date(start_date, end_date, df_raw):
-    #     print(start_date)
-    #     print(end_date)
 
 
 
