@@ -38,7 +38,7 @@ def init_dashboard(server):
     dash_app.layout = html.Div([
         dcc.Tabs([
                 dcc.Tab(label="Overview", children=[province.get_province_layout(dash_app)]),
-                dcc.Tab(label="Detail", children=[html.H3("Hello world"), detail.get_detail_layout(dash_app)])
+                dcc.Tab(label="Detail", children=[detail.get_detail_layout(dash_app)])
         ])
     ])
 

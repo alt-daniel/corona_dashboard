@@ -6,7 +6,7 @@ import plotly as plt
 from datetime import date
 
 
-def create_import_metric_block(string_amount, class_name, child_id, child_description_text):
+def create_import_metric_block(string_amount, class_name, child_id, child_description_text, description_id=str()):
     """
     Created a block that shows a metric with its description.
 
@@ -14,11 +14,12 @@ def create_import_metric_block(string_amount, class_name, child_id, child_descri
     @param class_name: Classname of the block
     @param child_id: Id for the metric amount
     @param child_description_text: Type of metric
+    @param description_id: Id for the description, by default not used
     @return: A div component with a metric.
     """
     div = html.Div([
                     html.Div(string_amount, id=child_id),
-                    html.Div(child_description_text)
+                    html.Div(child_description_text, id=description_id)
                 ], className=class_name)
     return div
 
@@ -26,13 +27,30 @@ def create_import_metric_block(string_amount, class_name, child_id, child_descri
 def create_data_table(df):
     table = dash_table.DataTable(
         id='database-table',
-        columns = [{"name":i, "id": i} for i in df.columns],
-        data = df.to_dict('records'),
-        sort_action = "native",
-        sort_mode = "native",
-        page_size = 50
+        columns=[{"name":i, "id": i} for i in df.columns],
+        data=df.to_dict('records'),
+        sort_action="native",
+        sort_mode="native",
+        page_size=50
     )
     return table
+
+
+def create_radio_items(radio_dict, id, class_name="dash-radio-items"):
+    # options = []
+    # for item in radio_list:
+    #     option = {'label': item[1], 'value': item[0]}
+    #     options.append(option)
+
+    radio_items = dcc.RadioItems(
+        id=id,
+        className=class_name,
+        options=[{'label': value, 'value': key} for key, value in radio_dict.items()],
+        value=next(iter(radio_dict))
+    )
+
+    return radio_items
+
 
 
 def create_datepicker(id):
@@ -41,7 +59,7 @@ def create_datepicker(id):
         min_date_allowed=date(2020, 1, 1),
         max_date_allowed=date(2021, 12, 31),
         start_date=date(2020, 1, 1),
-        end_date=date(2020,12,31),
+        end_date=date(2020, 12, 31),
         display_format='D MMM YYYY'
     )
     return datepicker
@@ -50,8 +68,8 @@ def create_datepicker(id):
 def create_dropdown(id, list_of_options, multi_boolean=False):
     dropdown = dcc.Dropdown(
                     id=id,
-                    options=[{'label': item.replace('_', ' '), "value": item} for item in list_of_options],
-                    value=list_of_options[0],
+                    options=[{'label': item[1], "value": item[0]} for item in list_of_options],
+                    value=list_of_options[0][0],
                     multi=multi_boolean
                 )
     return dropdown
@@ -69,7 +87,6 @@ def create_bar_chart(df, x, y):
         plot_bgcolor='rgba(249,249,249,0)'
         # yaxis_title_text=str(y),
     )
-
     return fig
 
 
@@ -80,5 +97,4 @@ def create_histogram_figure(df, x, y):
         yaxis_title_text=str(y),
         title_text='Aantallen per gemeente',
     )
-
     return fig

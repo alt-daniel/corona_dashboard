@@ -12,37 +12,36 @@ def get_province_layout(app):
     provinces = ["Flevoland", "Noord-Holland", "Friesland", "Zuid-Holland", "Zeeland",
                  "Noord-Brabant", "Gelderland", "Overijssel", "Limburg", "Drenthe", "Groningen", "Utrecht"]
 
-    statistics = ["Deceased", "Hospital_admission", "Total_reported"]
+    groupby_types = {
+        "Municipality_name": "Gemeente",
+        "Province": "Provincie"
+    }
+
+
+    statistics = [["Deceased", "Overleden"], ["Hospital_admission", "Ziekenhuis Opnames"], ["Total_reported", "Aantal positief"]]
 
     df = ut.create_csv_from_dataframe(Config.STATIC_DATA_DIR + '/COVID-19_aantallen_gemeente_per_dag.csv')
-    # df2 = df.groupby(['Municipality_name', 'Province'], as_index=False).sum()
     df2 = df.loc[df['Date_of_publication'].between('2020-01-01', '2020-12-12')].groupby(['Municipality_name', 'Province'], as_index=False).sum()
-
-    n_of_municipalities = str(len(df2['Municipality_name'].unique()))
-    max_deceased = dm.get_total_sum_from_column(df2, "Deceased")
-    max_hospital_admission = dm.get_total_sum_from_column(df2, "Hospital_admission")
-    max_total_reported = dm.get_total_sum_from_column(df2, "Total_reported")
-
-    max_value_range_slider = df2[statistics[0]].max()
-    min_value_range_slider = df2[statistics[0]].min()
 
     layout = html.Div([
         html.Div([
             html.Div([
                 html.Div([
                     html.Div([
-                        cu.create_import_metric_block(str(n_of_municipalities), "important-metric-block col",
-                                                   "important-metric-municipalities", "Gemeentes"),
-                        cu.create_import_metric_block(max_deceased, "important-metric-block col",
+                        cu.create_import_metric_block(str(0), "important-metric-block col",
+                                                   "important-metric-municipalities", "Gemeentes", "important-metric-municipalities-description"),
+                        cu.create_import_metric_block(0, "important-metric-block col",
                                                    "important-metric-deceased", "Overleden"),
-                        cu.create_import_metric_block(max_hospital_admission, "important-metric-block col",
+                        cu.create_import_metric_block(0, "important-metric-block col",
                                                    "important-metric-hospital-admission", "Ziekenhuisopnames"),
-                        cu.create_import_metric_block(max_total_reported, "important-metric-block col",
+                        cu.create_import_metric_block(0, "important-metric-block col",
                                                    "important-metric-total-reported", "Positief getest")
                     ], className="row"),
                     html.Div([
                         html.H2("Select statistic", id="histogram-statistic-title"),
                         cu.create_dropdown("statistic-selector", statistics),
+                        html.H2("Group on type:", id="c-title"),
+                        cu.create_radio_items(groupby_types, "groupby-radio-items"),
                         html.H2("Select a start and end date"),
                         cu.create_datepicker("statistics-datepicker"),
                         html.H2("Select a min and max value"),
@@ -70,12 +69,12 @@ def get_province_layout(app):
         ], className="container")
     ], id="province-container")
 
-    init_province_callbacks(app, df)
+    init_province_callbacks(app, df, groupby_types)
 
     return layout
 
 
-def init_province_callbacks(app, df):
+def init_province_callbacks(app, df, groupby_types):
     @app.callback(
         Output(component_id="statistic-rangeslider", component_property='min'),
         Output(component_id="statistic-rangeslider", component_property='max'),
@@ -83,12 +82,13 @@ def init_province_callbacks(app, df):
         Output(component_id="statistic-rangeslider", component_property='marks'),
         Input(component_id="statistic-selector", component_property='value'),
         Input("statistics-datepicker", 'start_date'),
-        Input("statistics-datepicker", 'end_date')
+        Input("statistics-datepicker", 'end_date'),
+        Input("groupby-radio-items", 'value')
     )
-    def update_range_slider(selector_value, start_date, end_date):
+    def update_range_slider(selector_value, start_date, end_date, radio_value):
 
         df2 = df.loc[df['Date_of_publication'].between(start_date, end_date)].\
-            groupby(['Municipality_name', 'Province'], as_index=False).sum()
+            groupby([radio_value], as_index=False).sum()
 
         min_value = df2[selector_value].min()
         max_value = df2[selector_value].max()
@@ -106,22 +106,27 @@ def init_province_callbacks(app, df):
         Output(component_id="important-metric-deceased", component_property='children'),
         Output(component_id="important-metric-hospital-admission", component_property='children'),
         Output(component_id="important-metric-total-reported", component_property='children'),
+        Output(component_id="important-metric-municipalities-description", component_property='children'),
         Input(component_id="statistic-selector", component_property='value'),
         Input(component_id="statistic-rangeslider", component_property='value'),
         Input("statistics-datepicker", 'start_date'),
-        Input("statistics-datepicker", 'end_date')
+        Input("statistics-datepicker", 'end_date'),
+        Input("groupby-radio-items", 'value')
     )
-    def update_bar_chart_on_range_and_selector(selector_value, rangeslider_value, start_date, end_date):
+    def update_bar_chart_on_range_and_selector(selector_value, rangeslider_value, start_date, end_date, radio_value):
         df2 = df.loc[df['Date_of_publication'].between(start_date, end_date)]. \
-                groupby(['Municipality_name', 'Province'], as_index=False).sum()
+                groupby([radio_value], as_index=False).sum()
         df3 = df2.loc[df2[selector_value].between(rangeslider_value[0], rangeslider_value[1])]
 
         max_deceased = dm.get_total_sum_from_column(df3, "Deceased")
         max_hospital_admission = dm.get_total_sum_from_column(df3, "Hospital_admission")
         max_total_reported = dm.get_total_sum_from_column(df3, "Total_reported")
 
-        return cu.create_bar_chart(df3, "Municipality_name", selector_value), df3['Municipality_name'].nunique(),\
-               max_deceased, max_hospital_admission, max_total_reported
+
+        label_radio_item = str(groupby_types.get(radio_value))
+
+        return cu.create_bar_chart(df3, radio_value, selector_value), df3[radio_value].nunique(),\
+               max_deceased, max_hospital_admission, max_total_reported, label_radio_item
 
 
     @app.callback(
